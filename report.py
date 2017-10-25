@@ -27,8 +27,19 @@ def top_authors():
     print("The most popular article authors of all time:\n")
     for name, num in rows:
     	print("{} -- {} views\n".format(name, num))
-#def busy_days():
+
+def busy_days():
+	db = psycopg2.connect(database=DBNAME)
+	c = db.cursor()
+	c.execute("select to_char(time, 'Month dd, yyyy'), round(100 * sum(case when status like '4%' or status like '5%' then 1 else 0 end) / count(*), 1) as percent from log group by to_char(time, 'Month dd, yyyy');")
+	rows = c.fetchall()
+	db.close()
+	print("Days when more than 1% of requests lead to errors:\n")
+	for time, percent in rows:
+		if float(percent) > 1.0:
+			print("{} {} -- {}% errors\n".format(time[0:4], time[10:], percent))
 
 if __name__ == '__main__':
     top_articles()
     top_authors()
+    busy_days()
